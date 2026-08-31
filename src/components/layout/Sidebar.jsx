@@ -222,7 +222,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
           {!collapsed && (
             <div className="whitespace-nowrap">
               <h1 className="text-[15px] font-bold text-slate-900">
-                Digital Academy
+                DigiCampus Academy
               </h1>
 
               <p className="text-[11px] text-slate-500">

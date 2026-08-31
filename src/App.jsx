@@ -14,6 +14,7 @@ import EditCourse from "./pages/Courses/EditCourse";
 import CourseContent from "./pages/Courses/CourseContent";
 import Students from "./pages/Students/Students";
 import StudentDetails from "./pages/Students/StudentDetails";
+import Login from "./pages/Login";
 
 const Placeholder = ({ title }) => {
   return (
@@ -21,12 +22,29 @@ const Placeholder = ({ title }) => {
       <h1 className="text-2xl font-bold text-slate-900">
         {title}
       </h1>
-
       <p className="mt-2 text-sm text-slate-500">
         This module is under development.
       </p>
     </div>
   );
+};
+
+// Protected Route Component to restrict access if token is missing
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
+// Public Route Component to redirect away from login if already authenticated
+const PublicRoute = ({ children }) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    return <Navigate to="/admin" replace />;
+  }
+  return children;
 };
 
 function App() {
@@ -37,19 +55,39 @@ function App() {
         {/* =========================
             ROOT REDIRECT
         ========================== */}
-
         <Route
           path="/"
-          element={<Navigate to="/admin" replace />}
+          element={
+            localStorage.getItem("token") ? (
+              <Navigate to="/admin" replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
         />
 
         {/* =========================
-            ADMIN LAYOUT
+            AUTH ROUTES
         ========================== */}
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
 
+        {/* =========================
+            ADMIN LAYOUT (PROTECTED)
+        ========================== */}
         <Route
           path="/admin"
-          element={<AdminLayout />}
+          element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
         >
 
           {/* Dashboard */}
@@ -61,65 +99,47 @@ function App() {
           {/* =========================
               LEARNING
           ========================== */}
-
           <Route
             path="courses"
-            element={ <Courses/>
-            }
+            element={<Courses />}
           />
           <Route path="courses/create" element={<CreateCourse />} />
           <Route path="courses/edit/:id" element={<EditCourse />} />
+          <Route path="courses/content/:id" element={<CourseContent />} />
 
-   <Route
-  path="courses/content/:id"
-  element={<CourseContent />}
-/>
           <Route
             path="lessons"
-            element={
-              <Placeholder title="Modules & Lessons" />
-            }
+            element={<Placeholder title="Modules & Lessons" />}
           />
 
           <Route
             path="assignments"
-            element={
-              <Placeholder title="Assignments" />
-            }
+            element={<Placeholder title="Assignments" />}
           />
 
           <Route
             path="submissions"
-            element={
-              <Placeholder title="Submissions" />
-            }
+            element={<Placeholder title="Submissions" />}
           />
 
           <Route
             path="quizzes"
-            element={
-              <Placeholder title="Quizzes" />
-            }
+            element={<Placeholder title="Quizzes" />}
           />
 
           <Route
             path="question-bank"
-            element={
-              <Placeholder title="Question Bank" />
-            }
+            element={<Placeholder title="Question Bank" />}
           />
 
           <Route
             path="quiz-attempts"
-            element={
-              <Placeholder title="Quiz Attempts" />
-            }
+            element={<Placeholder title="Quiz Attempts" />}
           />
 
           {/* =========================
               STUDENTS
           ========================== */}
-
           <Route
             path="students"
             element={<Students />}
@@ -132,117 +152,85 @@ function App() {
 
           <Route
             path="progress"
-            element={
-              <Placeholder title="Student Progress" />
-            }
+            element={<Placeholder title="Student Progress" />}
           />
 
           {/* =========================
               ENGAGEMENT
           ========================== */}
-
           <Route
             path="doubt-sessions"
-            element={
-              <Placeholder title="Doubt Sessions" />
-            }
+            element={<Placeholder title="Doubt Sessions" />}
           />
 
           <Route
             path="doubts"
-            element={
-              <Placeholder title="Student Doubts" />
-            }
+            element={<Placeholder title="Student Doubts" />}
           />
 
           <Route
             path="announcements"
-            element={
-              <Placeholder title="Announcements" />
-            }
+            element={<Placeholder title="Announcements" />}
           />
 
           {/* =========================
               SALES
           ========================== */}
-
           <Route
             path="orders"
-            element={
-              <Placeholder title="Orders" />
-            }
+            element={<Placeholder title="Orders" />}
           />
 
           <Route
             path="payments"
-            element={
-              <Placeholder title="Payments" />
-            }
+            element={<Placeholder title="Payments" />}
           />
 
           <Route
             path="coupons"
-            element={
-              <Placeholder title="Coupons" />
-            }
+            element={<Placeholder title="Coupons" />}
           />
 
           {/* =========================
               CERTIFICATION
           ========================== */}
-
           <Route
             path="certificates"
-            element={
-              <Placeholder title="Certificates" />
-            }
+            element={<Placeholder title="Certificates" />}
           />
 
           {/* =========================
               CONTENT
           ========================== */}
-
           <Route
             path="instructors"
-            element={
-              <Placeholder title="Instructors" />
-            }
+            element={<Placeholder title="Instructors" />}
           />
 
           <Route
             path="testimonials"
-            element={
-              <Placeholder title="Testimonials" />
-            }
+            element={<Placeholder title="Testimonials" />}
           />
 
           <Route
             path="faqs"
-            element={
-              <Placeholder title="FAQs" />
-            }
+            element={<Placeholder title="FAQs" />}
           />
 
           {/* =========================
               ANALYTICS
           ========================== */}
-
           <Route
             path="reports"
-            element={
-              <Placeholder title="Reports" />
-            }
+            element={<Placeholder title="Reports" />}
           />
 
           {/* =========================
               SYSTEM
           ========================== */}
-
           <Route
             path="settings"
-            element={
-              <Placeholder title="Settings" />
-            }
+            element={<Placeholder title="Settings" />}
           />
 
         </Route>
@@ -250,11 +238,14 @@ function App() {
         {/* =========================
             UNKNOWN ROUTES
         ========================== */}
-
         <Route
           path="*"
           element={
-            <Navigate to="/admin" replace />
+            localStorage.getItem("token") ? (
+              <Navigate to="/admin" replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
           }
         />
 
