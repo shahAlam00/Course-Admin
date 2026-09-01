@@ -85,6 +85,11 @@ const menuSections = [
         path: "/admin/students",
         icon: Users,
       },
+      {
+        label: "Doubt & Support",
+        path: "/admin/doubt-sessions",
+        icon: HelpCircle,
+      },
       // {
       //   label: "Progress",
       //   path: "/admin/progress",

@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   BrowserRouter,
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 
 import AdminLayout from "./components/layout/AdminLayout";
@@ -15,6 +16,22 @@ import CourseContent from "./pages/Courses/CourseContent";
 import Students from "./pages/Students/Students";
 import StudentDetails from "./pages/Students/StudentDetails";
 import Login from "./pages/Login";
+import DoubtSupport from "./pages/Doubt/DoubtSupport";
+
+// ScrollToTop component to force page view to start from top on every navigation
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "instant", // Change to "smooth" if you want smooth scrolling effect
+    });
+  }, [pathname]);
+
+  return null;
+};
 
 const Placeholder = ({ title }) => {
   return (
@@ -50,6 +67,7 @@ const PublicRoute = ({ children }) => {
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
 
         {/* =========================
@@ -160,7 +178,7 @@ function App() {
           ========================== */}
           <Route
             path="doubt-sessions"
-            element={<Placeholder title="Doubt Sessions" />}
+            element={<DoubtSupport/>}
           />
 
           <Route
