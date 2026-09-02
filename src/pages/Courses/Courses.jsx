@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
   Plus, Search, MoreVertical, Edit3, Trash2, Eye, EyeOff,
   BookOpen, Users, Clock3, IndianRupee, MoreHorizontal, X, Play,
+  AlertTriangle
 } from "lucide-react";
 import API from "../../utils/axios.js";
 
@@ -18,6 +19,16 @@ const Courses = () => {
   const [openMenu, setOpenMenu] = useState(null);
   const [videoModal, setVideoModal] = useState(null); // { youtubeUrl, title }
   const [loading, setLoading] = useState(true);
+
+  // Custom Center Popup Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    type: null, // "status" ya "delete"
+    courseId: null,
+    currentStatus: null,
+    title: "",
+    message: "",
+  });
 
   const fetchCourses = () => {
     setLoading(true);
@@ -40,28 +51,49 @@ const Courses = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const toggleStatus = async (id, currentStatus) => {
+  // Open Status Confirmation Popup
+  const openStatusConfirm = (id, currentStatus) => {
     const newStatus = currentStatus === "Published" ? "Draft" : "Published";
-    try {
-      await API.patch(`/courses/update/${id}`, { status: newStatus });
-      setCourses((prev) =>
-        prev.map((c) => (c._id === id || c.id === id ? { ...c, status: newStatus } : c))
-      );
-    } catch {
-      alert("Failed to update status.");
-    }
     setOpenMenu(null);
+    setConfirmModal({
+      isOpen: true,
+      type: "status",
+      courseId: id,
+      currentStatus: newStatus,
+      title: `${newStatus === "Published" ? "Publish" : "Unpublish"} Course?`,
+      message: `Are you sure you want to change this course status to ${newStatus}?`,
+    });
   };
 
-  const deleteCourse = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this course?")) return;
+  // Open Delete Confirmation Popup
+  const openDeleteConfirm = (id) => {
+    setOpenMenu(null);
+    setConfirmModal({
+      isOpen: true,
+      type: "delete",
+      courseId: id,
+      title: "Delete Course?",
+      message: "Are you sure you want to delete this course? This action cannot be undone.",
+    });
+  };
+
+  // Handle Confirmed Action
+  const handleConfirmAction = async () => {
+    const { type, courseId, currentStatus } = confirmModal;
     try {
-      await API.delete(`/courses/delete/${id}`);
-      setCourses((prev) => prev.filter((c) => c._id !== id && c.id !== id));
-      setOpenMenu(null);
+      if (type === "status") {
+        await API.patch(`/courses/update/${courseId}`, { status: currentStatus });
+        setCourses((prev) =>
+          prev.map((c) => (c._id === courseId || c.id === courseId ? { ...c, status: currentStatus } : c))
+        );
+      } else if (type === "delete") {
+        await API.delete(`/courses/delete/${courseId}`);
+        setCourses((prev) => prev.filter((c) => c._id !== courseId && c.id !== courseId));
+      }
     } catch (err) {
-      alert(err?.response?.data?.message || "Failed to delete course.");
-      setOpenMenu(null);
+      alert(err?.response?.data?.message || "Action failed. Please try again.");
+    } finally {
+      setConfirmModal({ isOpen: false, type: null, courseId: null, currentStatus: null, title: "", message: "" });
     }
   };
 
@@ -124,17 +156,48 @@ const Courses = () => {
               course={course}
               openMenu={openMenu}
               setOpenMenu={setOpenMenu}
-              toggleStatus={toggleStatus}
-              deleteCourse={deleteCourse}
+              openStatusConfirm={openStatusConfirm}
+              openDeleteConfirm={openDeleteConfirm}
               onVideoClick={() => setVideoModal({ youtubeUrl: course.youtubeUrl, title: course.title })}
             />
           ))}
         </div>
       )}
 
+      {/* CUSTOM CONFIRMATION POPUP MODAL */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-slate-100 text-center space-y-4">
+            <div className={`mx-auto flex h-12 w-12 items-center justify-center rounded-2xl ${confirmModal.type === 'delete' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'}`}>
+              <AlertTriangle size={24} />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-slate-900">{confirmModal.title}</h3>
+              <p className="text-sm text-slate-500">{confirmModal.message}</p>
+            </div>
+            <div className="flex items-center gap-3 pt-3">
+              <button
+                onClick={() => setConfirmModal({ isOpen: false, type: null, courseId: null, currentStatus: null, title: "", message: "" })}
+                className="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-200 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmAction}
+                className={`flex-1 rounded-xl py-3 text-sm font-semibold text-white shadow-lg transition ${
+                  confirmModal.type === 'delete' ? 'bg-red-600 hover:bg-red-700 shadow-red-600/30' : 'bg-slate-900 hover:bg-slate-800 shadow-slate-900/30'
+                }`}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* VIDEO MODAL */}
       {videoModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
           onClick={() => setVideoModal(null)}>
           <div className="relative w-full max-w-3xl" onClick={(e) => e.stopPropagation()}>
             <button onClick={() => setVideoModal(null)}
@@ -173,10 +236,10 @@ const StatCard = ({ title, value, icon: Icon }) => (
   </div>
 );
 
-const CourseCard = ({ course, openMenu, setOpenMenu, toggleStatus, deleteCourse, onVideoClick }) => {
+const CourseCard = ({ course, openMenu, setOpenMenu, openStatusConfirm, openDeleteConfirm, onVideoClick }) => {
   const courseId = course._id || course.id;
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md">
       {/* Thumbnail */}
       <div className="relative h-48 overflow-hidden cursor-pointer group" onClick={onVideoClick}>
         <img src={course.thumbnail} alt={course.title}
@@ -200,7 +263,7 @@ const CourseCard = ({ course, openMenu, setOpenMenu, toggleStatus, deleteCourse,
             <MoreVertical size={18} />
           </button>
           {openMenu === courseId && (
-            <div className="absolute right-0 top-11 z-20 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl">
+            <div className="absolute right-0 top-11 z-50 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl">
               <Link to={`/admin/courses/edit/${courseId}`}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
                 <Edit3 size={16} /> Edit Course
@@ -209,12 +272,12 @@ const CourseCard = ({ course, openMenu, setOpenMenu, toggleStatus, deleteCourse,
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
                 <BookOpen size={16} /> Manage Content
               </Link>
-              <button onClick={() => toggleStatus(courseId, course.status)}
+              <button onClick={() => openStatusConfirm(courseId, course.status)}
                 className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50">
                 {course.status === "Published" ? <><EyeOff size={16} /> Unpublish</> : <><Eye size={16} /> Publish</>}
               </button>
               <div className="my-1 border-t border-slate-100" />
-              <button onClick={() => deleteCourse(courseId)}
+              <button onClick={() => openDeleteConfirm(courseId)}
                 className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50">
                 <Trash2 size={16} /> Delete Course
               </button>
@@ -257,6 +320,21 @@ const CourseCard = ({ course, openMenu, setOpenMenu, toggleStatus, deleteCourse,
             className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white hover:bg-slate-800">
             Manage <MoreHorizontal size={15} />
           </Link>
+        </div>
+        {/* Quick Action Buttons */}
+        <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
+          <button onClick={() => openStatusConfirm(courseId, course.status)}
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition ${
+              course.status === "Published"
+                ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
+                : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+            }`}>
+            {course.status === "Published" ? <><EyeOff size={13} /> Unpublish</> : <><Eye size={13} /> Publish</>}
+          </button>
+          <button onClick={() => openDeleteConfirm(courseId)}
+            className="flex items-center justify-center gap-1.5 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-100">
+            <Trash2 size={13} /> Delete
+          </button>
         </div>
       </div>
     </div>

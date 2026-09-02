@@ -1,5 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
+import Logo from "../../assets/Logo.png";
 import {
   LayoutDashboard,
   BookOpen,
@@ -217,11 +218,11 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         <div className="flex items-center gap-3 overflow-hidden">
           <div
             className="
-              flex h-10 w-10 shrink-0 items-center justify-center
+              flex h-12 w-12 shrink-0 items-center justify-center
               rounded-xl bg-slate-900 text-white
             "
           >
-            <GraduationCap size={22} />
+            <img src={Logo} alt="DigiCampus Logo" className="h-full w-full object-contain" />
           </div>
 
           {!collapsed && (
