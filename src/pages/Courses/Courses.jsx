@@ -43,7 +43,7 @@ const Courses = () => {
   const toggleStatus = async (id, currentStatus) => {
     const newStatus = currentStatus === "Published" ? "Draft" : "Published";
     try {
-      await API.put(`/courses/update/${id}`, { status: newStatus });
+      await API.patch(`/courses/update/${id}`, { status: newStatus });
       setCourses((prev) =>
         prev.map((c) => (c._id === id || c.id === id ? { ...c, status: newStatus } : c))
       );
@@ -58,10 +58,11 @@ const Courses = () => {
     try {
       await API.delete(`/courses/delete/${id}`);
       setCourses((prev) => prev.filter((c) => c._id !== id && c.id !== id));
-    } catch {
-      alert("Failed to delete course.");
+      setOpenMenu(null);
+    } catch (err) {
+      alert(err?.response?.data?.message || "Failed to delete course.");
+      setOpenMenu(null);
     }
-    setOpenMenu(null);
   };
 
   return (
