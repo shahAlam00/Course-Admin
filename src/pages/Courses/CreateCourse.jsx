@@ -12,13 +12,17 @@ import {
   BookOpen,
   IndianRupee,
   Clock3,
-  UserRound,
+  UserRound, 
   FileText,
   Target,
   AlertCircle,
   Video,
   Link,
   FileVideo,
+  Layers,
+  ChevronDown,
+  ChevronUp,
+  GripVertical,
 } from "lucide-react";
 
 const CreateCourse = () => {
@@ -58,7 +62,62 @@ const CreateCourse = () => {
     "Live Doubt Sessions",
   ]);
 
+  const [modules, setModules] = useState([]);
+  const [expandedModules, setExpandedModules] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+
+  /* ================= MODULES ================= */
+
+  const addModule = () => {
+    const id = Date.now();
+    setModules((prev) => [...prev, { _tempId: id, title: "", lessons: [] }]);
+    setExpandedModules((prev) => ({ ...prev, [id]: true }));
+  };
+
+  const removeModule = (tempId) =>
+    setModules((prev) => prev.filter((m) => m._tempId !== tempId));
+
+  const updateModuleTitle = (tempId, value) =>
+    setModules((prev) =>
+      prev.map((m) => (m._tempId === tempId ? { ...m, title: value } : m))
+    );
+
+  const toggleModule = (tempId) =>
+    setExpandedModules((prev) => ({ ...prev, [tempId]: !prev[tempId] }));
+
+  /* ================= LESSONS ================= */
+
+  const addLesson = (moduleTempId) =>
+    setModules((prev) =>
+      prev.map((m) =>
+        m._tempId === moduleTempId
+          ? { ...m, lessons: [...m.lessons, { _tempId: Date.now(), title: "", videoUrl: "", duration: "" }] }
+          : m
+      )
+    );
+
+  const removeLesson = (moduleTempId, lessonTempId) =>
+    setModules((prev) =>
+      prev.map((m) =>
+        m._tempId === moduleTempId
+          ? { ...m, lessons: m.lessons.filter((l) => l._tempId !== lessonTempId) }
+          : m
+      )
+    );
+
+  const updateLesson = (moduleTempId, lessonTempId, field, value) =>
+    setModules((prev) =>
+      prev.map((m) =>
+        m._tempId === moduleTempId
+          ? {
+              ...m,
+              lessons: m.lessons.map((l) =>
+                l._tempId === lessonTempId ? { ...l, [field]: value } : l
+              ),
+            }
+          : m
+      )
+    );
 
   /* ================= CHANGE ================= */
 
@@ -177,6 +236,22 @@ const CreateCourse = () => {
 
     setIsSaving(true);
     try {
+      const cleanModules = modules
+        .filter((m) => m.title.trim())
+        .map((m, mIdx) => ({
+          title: m.title.trim(),
+          order: mIdx,
+          lessons: m.lessons
+            .filter((l) => l.title.trim())
+            .map((l, lIdx) => ({
+              title: l.title.trim(),
+              videoUrl: l.videoUrl.trim(),
+              videoType: "youtube",
+              duration: l.duration.trim(),
+              order: lIdx,
+            })),
+        }));
+
       const hasFile = formData.thumbnail || formData.videoFile;
 
       if (hasFile) {
@@ -200,6 +275,7 @@ const CreateCourse = () => {
         outcomes.filter(Boolean).forEach((o) => fd.append("outcomes[]", o));
         requirements.filter(Boolean).forEach((r) => fd.append("requirements[]", r));
         features.forEach((f) => fd.append("features[]", f));
+        fd.append("modules", JSON.stringify(cleanModules));
         await API.post("/courses/create", fd, {
           headers: { "Content-Type": "multipart/form-data" },
         });
@@ -222,6 +298,7 @@ const CreateCourse = () => {
           outcomes: outcomes.filter(Boolean),
           requirements: requirements.filter(Boolean),
           features,
+          modules: cleanModules,
         });
       }
 
@@ -873,6 +950,194 @@ const CreateCourse = () => {
             >
               <Plus size={17} />
               Add Learning Outcome
+            </button>
+
+          </Section>
+
+          {/* ================= CURRICULUM ================= */}
+
+          <Section
+            icon={Layers}
+            title="Course Curriculum"
+            description="Add modules and lessons. Each lesson needs a title, YouTube URL, and duration."
+          >
+
+            <div className="space-y-4">
+
+              {modules.map((mod, mIdx) => (
+                <div
+                  key={mod._tempId}
+                  className="rounded-xl border border-slate-200 overflow-hidden"
+                >
+
+                  {/* Module Header */}
+                  <div className="flex items-center gap-3 bg-slate-50 px-4 py-3 border-b border-slate-200">
+
+                    <GripVertical size={16} className="text-slate-300 shrink-0" />
+
+                    <span className="text-xs font-bold text-slate-400 shrink-0">
+                      Module {mIdx + 1}
+                    </span>
+
+                    <input
+                      type="text"
+                      value={mod.title}
+                      onChange={(e) => updateModuleTitle(mod._tempId, e.target.value)}
+                      placeholder="Module title (e.g. Introduction to SEO)"
+                      className="
+                        flex-1 h-9
+                        rounded-lg
+                        border border-slate-200
+                        bg-white
+                        px-3
+                        text-sm font-semibold text-slate-800
+                        outline-none
+                        transition
+                        placeholder:font-normal placeholder:text-slate-400
+                        focus:border-slate-400
+                      "
+                    />
+
+                    <button
+                      onClick={() => toggleModule(mod._tempId)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-200 transition"
+                    >
+                      {expandedModules[mod._tempId]
+                        ? <ChevronUp size={16} />
+                        : <ChevronDown size={16} />}
+                    </button>
+
+                    <button
+                      onClick={() => removeModule(mod._tempId)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 transition"
+                    >
+                      <X size={16} />
+                    </button>
+
+                  </div>
+
+                  {/* Lessons */}
+                  {expandedModules[mod._tempId] && (
+                    <div className="p-4 space-y-3">
+
+                      {mod.lessons.map((lesson, lIdx) => (
+                        <div
+                          key={lesson._tempId}
+                          className="grid gap-2 rounded-xl border border-slate-100 bg-slate-50 p-3"
+                        >
+
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-slate-400 w-5 shrink-0">
+                              {lIdx + 1}.
+                            </span>
+                            <input
+                              type="text"
+                              value={lesson.title}
+                              onChange={(e) => updateLesson(mod._tempId, lesson._tempId, "title", e.target.value)}
+                              placeholder="Lesson title"
+                              className="
+                                flex-1 h-9
+                                rounded-lg
+                                border border-slate-200
+                                bg-white
+                                px-3
+                                text-sm text-slate-800
+                                outline-none
+                                transition
+                                placeholder:text-slate-400
+                                focus:border-slate-400
+                              "
+                            />
+                            <button
+                              onClick={() => removeLesson(mod._tempId, lesson._tempId)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 transition shrink-0"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+
+                          <div className="flex gap-2 pl-7">
+                            <input
+                              type="url"
+                              value={lesson.videoUrl}
+                              onChange={(e) => updateLesson(mod._tempId, lesson._tempId, "videoUrl", e.target.value)}
+                              placeholder="YouTube URL (https://youtube.com/watch?v=...)"
+                              className="
+                                flex-1 h-9
+                                rounded-lg
+                                border border-slate-200
+                                bg-white
+                                px-3
+                                text-sm text-slate-800
+                                outline-none
+                                transition
+                                placeholder:text-slate-400
+                                focus:border-slate-400
+                              "
+                            />
+                            <input
+                              type="text"
+                              value={lesson.duration}
+                              onChange={(e) => updateLesson(mod._tempId, lesson._tempId, "duration", e.target.value)}
+                              placeholder="Duration (e.g. 12:30)"
+                              className="
+                                w-36 h-9
+                                rounded-lg
+                                border border-slate-200
+                                bg-white
+                                px-3
+                                text-sm text-slate-800
+                                outline-none
+                                transition
+                                placeholder:text-slate-400
+                                focus:border-slate-400
+                              "
+                            />
+                          </div>
+
+                        </div>
+                      ))}
+
+                      <button
+                        onClick={() => addLesson(mod._tempId)}
+                        className="
+                          inline-flex items-center gap-1.5
+                          text-xs font-semibold
+                          text-indigo-600
+                          hover:text-indigo-800
+                          transition
+                        "
+                      >
+                        <Plus size={14} />
+                        Add Lesson
+                      </button>
+
+                    </div>
+                  )}
+
+                </div>
+              ))}
+
+            </div>
+
+            <button
+              onClick={addModule}
+              className="
+                mt-4 inline-flex
+                items-center gap-2
+                rounded-xl
+                border border-dashed border-slate-300
+                bg-slate-50
+                px-4 py-2.5
+                text-sm font-semibold
+                text-slate-700
+                hover:border-slate-400
+                hover:bg-white
+                transition
+              "
+            >
+              <Plus size={17} />
+              Add Module
             </button>
 
           </Section>
