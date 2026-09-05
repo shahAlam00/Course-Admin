@@ -31,6 +31,12 @@ const Login = () => {
       }
       navigate("/");
     } catch (err) {
+        if (error.response?.status === 429) {
+    setError(
+      "Too many login attempts. Please try again after 15 minutes."
+    );
+    return;
+  }
       setError(
         err.response?.data?.message || 
         err.response?.data?.error || 

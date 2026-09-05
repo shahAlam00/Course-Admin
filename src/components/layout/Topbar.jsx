@@ -14,14 +14,19 @@ const Topbar = ({ collapsed }) => {
   const [showModal, setShowModal] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
-  const handleLogoutConfirm = () => {
-    setLoggingOut(true);
-    setTimeout(() => {
-      localStorage.removeItem("token");
-      navigate("/login", { replace: true });
-    }, 600);
-  };
+const handleLogoutConfirm = () => {
+  setLoggingOut(true);
 
+  setTimeout(() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    // Optional: agar koi auth-related state/cache hai
+    sessionStorage.clear();
+
+    navigate("/login", { replace: true });
+  }, 600);
+};
   return (
     <>
       <header

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Users, IndianRupee, BookOpen, Award, TrendingUp, Loader2 } from "lucide-react";
+import { Users, BookOpen, Award, TrendingUp } from "lucide-react";
 import API from "../utils/axios.js";
 
 const Dashboard = () => {
@@ -48,7 +48,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className=" bg-slate-50/50 min-h-screen">
+    <div className="bg-slate-50/50 min-h-screen">
       {/* Header Section */}
       <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
@@ -58,8 +58,72 @@ const Dashboard = () => {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="animate-spin text-indigo-600" size={36} />
+        <div className="space-y-8 animate-pulse">
+          {/* Stats Grid Skeleton */}
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            {[1, 2, 3, 4].map((item) => (
+              <div 
+                key={item} 
+                className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2 w-full">
+                    <div className="h-3 w-24 bg-slate-200 rounded"></div>
+                    <div className="h-8 w-16 bg-slate-200 rounded"></div>
+                  </div>
+                  <div className="h-12 w-12 rounded-2xl bg-slate-200 flex-shrink-0"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Recent Courses Table Skeleton */}
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+              <div className="space-y-1">
+                <div className="h-4 w-32 bg-slate-200 rounded"></div>
+                <div className="h-3 w-48 bg-slate-200 rounded"></div>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50/75 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    <th className="px-6 py-4">Course</th>
+                    <th className="px-6 py-4">Category</th>
+                    <th className="px-6 py-4">Price</th>
+                    <th className="px-6 py-4">Enrolled</th>
+                    <th className="px-6 py-4">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {[1, 2, 3, 4, 5].map((row) => (
+                    <tr key={row}>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-16 rounded-lg bg-slate-200 flex-shrink-0"></div>
+                          <div className="h-4 w-40 bg-slate-200 rounded"></div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 w-24 bg-slate-200 rounded"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 w-16 bg-slate-200 rounded"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 w-10 bg-slate-200 rounded"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-6 w-20 rounded-full bg-slate-200"></div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       ) : (
         <>
