@@ -17,6 +17,7 @@ import Students from "./pages/Students/Students";
 import StudentDetails from "./pages/Students/StudentDetails";
 import Login from "./pages/Login";
 import DoubtSupport from "./pages/Doubt/DoubtSupport";
+import Certificates from "./pages/Certificates/Certificates.jsx"
 
 // ScrollToTop component to force page view to start from top on every navigation
 const ScrollToTop = () => {
@@ -214,7 +215,7 @@ function App() {
           ========================== */}
           <Route
             path="certificates"
-            element={<Placeholder title="Certificates" />}
+            element={<Certificates/>}
           />
 
           {/* =========================

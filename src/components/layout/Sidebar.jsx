@@ -22,7 +22,9 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+
   GraduationCap,
+  AwardIcon,
 } from "lucide-react";
 
 const menuSections = [
@@ -44,6 +46,11 @@ const menuSections = [
         label: "Courses",
         path: "/admin/courses",
         icon: BookOpen,
+      },
+      {
+        label: "Certificates",
+        path: "/admin/certificates",
+        icon: AwardIcon,
       },
       // {
       //   label: "Modules & Lessons",
